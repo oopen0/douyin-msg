@@ -1,0 +1,1199 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>抖音评论私信工具</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --ink: #152033;
+      --muted: #68758a;
+      --line: #dce3ec;
+      --line-strong: #cad5e2;
+      --primary: #087f73;
+      --primary-hover: #06685f;
+      --primary-soft: #e8f6f3;
+      --accent: #fe2c55;
+      --warn: #9a6700;
+      --warn-bg: #fff8dc;
+      --danger: #b42318;
+      --danger-bg: #fff0ee;
+      --success: #087f5b;
+      --success-bg: #eaf8f1;
+      --shadow: 0 18px 45px rgba(36, 50, 72, .08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% -20%, rgba(8, 127, 115, .09), transparent 30rem),
+        var(--bg);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+    }
+
+    button, input, textarea { font: inherit; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .58;
+    }
+
+    .app-header {
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 0 30px;
+      background: rgba(255, 255, 255, .94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+      font-size: 19px;
+      border-radius: 12px;
+      background:
+        linear-gradient(140deg, rgba(255,255,255,.24), transparent 45%),
+        linear-gradient(135deg, #111827 0 48%, var(--accent) 49% 100%);
+      box-shadow: 0 8px 18px rgba(254, 44, 85, .18);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 19px;
+      letter-spacing: -.01em;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .local-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+      padding: 7px 11px;
+      color: #356059;
+      background: #eff8f5;
+      border: 1px solid #d5eee7;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .local-pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #21a67a;
+      box-shadow: 0 0 0 4px rgba(33, 166, 122, .12);
+    }
+
+    .page {
+      width: min(1450px, calc(100% - 40px));
+      margin: 22px auto 30px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .query-area { padding: 8px 16px; }
+
+    .query-form {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 96px 126px;
+      gap: 10px;
+      padding: 10px 0;
+    }
+
+    .creator-query-form {
+      grid-template-columns: minmax(220px, 1fr) 96px 112px 126px;
+    }
+
+    .query-form + .query-form {
+      border-top: 1px solid var(--line);
+    }
+
+    .field {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      outline: none;
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(8, 127, 115, .11);
+    }
+
+    .field::placeholder { color: #8a96a8; }
+
+    .action-button {
+      min-height: 44px;
+      padding: 0 16px;
+      color: #fff;
+      background: var(--primary);
+      border-radius: 9px;
+      font-weight: 700;
+      transition: background .16s ease, transform .16s ease;
+    }
+
+    .action-button:hover:not(:disabled) {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .action-button.secondary { background: #334155; }
+    .action-button.secondary:hover:not(:disabled) { background: #202d40; }
+
+    .results-bar {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 16px;
+      color: var(--muted);
+      background: var(--surface-soft);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .result-summary strong { color: var(--ink); }
+
+    .result-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stop-button {
+      display: none;
+      min-height: 30px;
+      padding: 5px 11px;
+      color: var(--danger);
+      background: #fff;
+      border: 1px solid #efb9b4;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .stop-button:hover {
+      color: #8f1f17;
+      background: var(--danger-bg);
+    }
+
+    .source-badge {
+      display: none;
+      max-width: 260px;
+      padding: 4px 8px;
+      color: #556277;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .comments {
+      height: calc(100vh - 252px);
+      min-height: 500px;
+      max-height: 740px;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-color: #aab4c1 transparent;
+      scrollbar-width: thin;
+    }
+
+    .empty-state {
+      min-height: 480px;
+      display: grid;
+      place-items: center;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      width: 66px;
+      height: 66px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 16px;
+      border-radius: 20px;
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-size: 28px;
+    }
+
+    .empty-state h2 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .empty-state p {
+      max-width: 360px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .comment-item {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 14px 16px;
+      text-align: left;
+      color: inherit;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      transition: background .14s ease, box-shadow .14s ease;
+    }
+
+    .comment-item:hover { background: #f8fbfb; }
+
+    .comment-item[aria-selected="true"] {
+      position: relative;
+      background: #f0faf8;
+      box-shadow: inset 3px 0 var(--primary);
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: #fff;
+      background: linear-gradient(135deg, #3d7d75, #77a79f);
+      border: 1px solid rgba(15, 23, 42, .06);
+      border-radius: 50%;
+      font-size: 15px;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .comment-main { min-width: 0; }
+
+    .comment-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .comment-name span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .video-tag {
+      max-width: 170px;
+      padding: 2px 6px;
+      color: #6e5b20;
+      background: #fff8d9;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .comment-text {
+      margin-top: 4px;
+      color: #263348;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .comment-side {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      padding-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .side-column {
+      display: grid;
+      gap: 18px;
+      position: sticky;
+      top: 88px;
+    }
+
+    .side-card {
+      padding: 18px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .card-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card-heading h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .status-dot::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #a0a9b6;
+    }
+
+    .status-dot.ready { color: var(--success); }
+    .status-dot.ready::before { background: #19a974; }
+    .status-dot.warning { color: var(--warn); }
+    .status-dot.warning::before { background: #d49a18; }
+
+    .label {
+      display: block;
+      margin: 12px 0 7px;
+      color: #59667a;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    textarea.field {
+      min-height: 104px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    #cookieInput {
+      min-height: 88px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    #messageInput { min-height: 116px; }
+
+    .full-button {
+      width: 100%;
+      min-height: 42px;
+      margin-top: 10px;
+    }
+
+    .config-hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .divider {
+      height: 1px;
+      margin: 16px 0;
+      background: var(--line);
+    }
+
+    .selected-placeholder {
+      padding: 20px 8px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    .selected-user {
+      display: none;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .selected-details { min-width: 0; }
+
+    .selected-name {
+      font-weight: 750;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .selected-uid {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .selected-comment {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 11px;
+      color: #405069;
+      background: var(--surface-soft);
+      border-left: 3px solid #b9c7d7;
+      border-radius: 6px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .selected-signature {
+      display: none;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .send-result {
+      display: none;
+      margin-top: 10px;
+      padding: 9px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .send-result.success {
+      display: block;
+      color: var(--success);
+      background: var(--success-bg);
+    }
+
+    .send-result.error {
+      display: block;
+      color: var(--danger);
+      background: var(--danger-bg);
+    }
+
+    .privacy-note {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .privacy-note span:first-child {
+      color: var(--primary);
+      font-size: 14px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 30;
+      max-width: min(560px, calc(100vw - 32px));
+      padding: 11px 15px;
+      color: #fff;
+      background: #273449;
+      border-radius: 9px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, .25);
+      opacity: 0;
+      transform: translate(-50%, 18px);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .toast.error { background: #9d2b24; }
+
+    .spinner {
+      width: 15px;
+      height: 15px;
+      display: inline-block;
+      vertical-align: -3px;
+      margin-right: 7px;
+      border: 2px solid rgba(255,255,255,.42);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 980px) {
+      .page {
+        grid-template-columns: 1fr;
+        width: min(760px, calc(100% - 24px));
+      }
+
+      .side-column {
+        position: static;
+        grid-template-columns: 1fr;
+      }
+
+      .comments {
+        height: 600px;
+        min-height: 430px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .app-header {
+        height: auto;
+        min-height: 64px;
+        padding: 10px 14px;
+      }
+
+      .brand-subtitle, .local-pill { display: none; }
+      .query-area { padding: 7px 11px; }
+
+      .query-form {
+        grid-template-columns: 1fr 78px;
+      }
+
+      .query-form .field:first-child { grid-column: 1 / -1; }
+      .query-form .action-button { padding: 0 10px; }
+      .creator-query-form .action-button { grid-column: 1 / -1; }
+      .result-meta .source-badge,
+      .result-meta #failureSummary { display: none !important; }
+      .comment-item { grid-template-columns: 40px minmax(0, 1fr); }
+      .avatar { width: 38px; height: 38px; }
+      .comment-side { display: none; }
+      .video-tag { max-width: 110px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">抖</div>
+      <div>
+        <h1>抖音评论私信工具</h1>
+        <div class="brand-subtitle">评论洞察与单人触达，一页完成</div>
+      </div>
+    </div>
+    <div class="local-pill">仅在本机运行</div>
+  </header>
+
+  <main class="page">
+    <section class="panel" aria-label="评论工作区">
+      <div class="query-area">
+        <form class="query-form" id="videoForm">
+          <input class="field" id="videoUrl" type="text" required
+                 placeholder="粘贴抖音视频分享链接，如 www.douyin.com/video/…"
+                 aria-label="抖音视频链接">
+          <input class="field" id="commentLimit" type="number" min="1" max="200" value="50"
+                 aria-label="最多评论数">
+          <button class="action-button load-button" type="submit" data-label="加载评论">加载评论</button>
+        </form>
+
+        <form class="query-form creator-query-form" id="creatorForm">
+          <input class="field" id="creatorUrl" type="text" required
+                 placeholder="粘贴博主主页链接，如 www.douyin.com/user/…"
+                 aria-label="抖音博主主页链接">
+          <input class="field" id="videoLimit" type="number" min="1" max="10" value="10"
+                 aria-label="最多作品数">
+          <input class="field" id="creatorCommentLimit" type="number" min="1" max="1000" value="100"
+                 aria-label="评论总数上限" title="评论总数，最多 1000 条">
+          <button class="action-button load-button" type="submit" data-label="拉博主评论">拉博主评论</button>
+        </form>
+      </div>
+
+      <div class="results-bar" aria-live="polite">
+        <div class="result-summary" id="resultSummary">等待加载评论</div>
+        <div class="result-meta">
+          <button class="stop-button" id="stopLoading" type="button">停止拉取</button>
+          <span class="source-badge" id="sourceBadge"></span>
+          <span id="failureSummary"></span>
+        </div>
+      </div>
+
+      <div class="comments" id="commentList">
+        <div class="empty-state" id="emptyState">
+          <div>
+            <div class="empty-icon" aria-hidden="true">◎</div>
+            <h2>从一条链接开始</h2>
+            <p>加载单个视频评论，或一次读取博主多个作品下的评论。结果会保留到本页刷新前。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side-column" aria-label="配置与私信">
+      <section class="side-card">
+        <div class="card-heading">
+          <h2>抖音 Cookie</h2>
+          <span class="status-dot" id="cookieStatus">检查中</span>
+        </div>
+        <label class="label" for="cookieInput">更新登录 Cookie</label>
+        <textarea class="field" id="cookieInput" spellcheck="false" autocomplete="off"
+                  placeholder="粘贴完整 Cookie；已有配置时无需重复填写"></textarea>
+        <button class="action-button secondary full-button" id="saveCookie" type="button">保存 Cookie</button>
+        <div class="config-hint" id="cookieHint">正在读取本地配置…</div>
+        <div class="privacy-note">
+          <span aria-hidden="true">◆</span>
+          <span>Cookie 只写入本项目的 .env，不会上传到第三方服务。</span>
+        </div>
+      </section>
+
+      <section class="side-card">
+        <div class="card-heading">
+          <h2>发送私信</h2>
+          <span class="status-dot" id="messageStatus">检查中</span>
+        </div>
+
+        <div class="selected-placeholder" id="selectedPlaceholder">
+          从左侧选择一条评论<br>这里会显示目标用户
+        </div>
+
+        <div class="selected-user" id="selectedUser">
+          <div class="avatar" id="selectedAvatar"></div>
+          <div class="selected-details">
+            <div class="selected-name" id="selectedName"></div>
+            <div class="selected-uid" id="selectedUid"></div>
+          </div>
+        </div>
+        <div class="selected-signature" id="selectedSignature"></div>
+        <div class="selected-comment" id="selectedComment"></div>
+
+        <div class="divider"></div>
+
+        <label class="label" for="messageInput">私信内容</label>
+        <textarea class="field" id="messageInput" maxlength="500"
+                  placeholder="输入发给当前用户的私信内容"></textarea>
+        <button class="action-button full-button" id="sendMessage" type="button" disabled>发送私信</button>
+        <div class="send-result" id="sendResult" role="status"></div>
+        <div class="privacy-note">
+          <span aria-hidden="true">◇</span>
+          <span>每次只发送给当前选中的一个用户。请控制频率并遵守平台规则。</span>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const state = {
+        comments: [],
+        selectedIndex: -1,
+        loading: false,
+        sending: false,
+        messagingReady: false,
+        currentRequestId: "",
+        currentController: null
+      };
+
+      const els = {
+        videoForm: document.getElementById("videoForm"),
+        creatorForm: document.getElementById("creatorForm"),
+        videoUrl: document.getElementById("videoUrl"),
+        creatorUrl: document.getElementById("creatorUrl"),
+        commentLimit: document.getElementById("commentLimit"),
+        videoLimit: document.getElementById("videoLimit"),
+        creatorCommentLimit: document.getElementById("creatorCommentLimit"),
+        resultSummary: document.getElementById("resultSummary"),
+        sourceBadge: document.getElementById("sourceBadge"),
+        failureSummary: document.getElementById("failureSummary"),
+        stopLoading: document.getElementById("stopLoading"),
+        commentList: document.getElementById("commentList"),
+        emptyState: document.getElementById("emptyState"),
+        cookieInput: document.getElementById("cookieInput"),
+        saveCookie: document.getElementById("saveCookie"),
+        cookieStatus: document.getElementById("cookieStatus"),
+        cookieHint: document.getElementById("cookieHint"),
+        messageStatus: document.getElementById("messageStatus"),
+        selectedPlaceholder: document.getElementById("selectedPlaceholder"),
+        selectedUser: document.getElementById("selectedUser"),
+        selectedAvatar: document.getElementById("selectedAvatar"),
+        selectedName: document.getElementById("selectedName"),
+        selectedUid: document.getElementById("selectedUid"),
+        selectedSignature: document.getElementById("selectedSignature"),
+        selectedComment: document.getElementById("selectedComment"),
+        messageInput: document.getElementById("messageInput"),
+        sendMessage: document.getElementById("sendMessage"),
+        sendResult: document.getElementById("sendResult"),
+        toast: document.getElementById("toast")
+      };
+
+      let toastTimer;
+
+      async function api(path, body, requestOptions = {}) {
+        const options = body === undefined
+          ? {
+              headers: { "Accept": "application/json" },
+              signal: requestOptions.signal
+            }
+          : {
+              method: "POST",
+              headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(body),
+              signal: requestOptions.signal
+            };
+        let response;
+        try {
+          response = await fetch(path, options);
+        } catch (error) {
+          if (error.name === "AbortError") throw error;
+          throw new Error("无法连接本地服务，请确认程序仍在运行");
+        }
+        let payload;
+        try {
+          payload = await response.json();
+        } catch (_) {
+          throw new Error(`本地服务返回异常（HTTP ${response.status}）`);
+        }
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.error || `请求失败（HTTP ${response.status}）`);
+        }
+        return payload.data;
+      }
+
+      function showToast(message, isError = false) {
+        clearTimeout(toastTimer);
+        els.toast.textContent = message;
+        els.toast.classList.toggle("error", isError);
+        els.toast.classList.add("visible");
+        toastTimer = setTimeout(() => els.toast.classList.remove("visible"), 3200);
+      }
+
+      function setStatus(element, text, mode = "") {
+        element.textContent = text;
+        element.className = `status-dot ${mode}`.trim();
+      }
+
+      function setLoading(active, activeButton) {
+        state.loading = active;
+        els.stopLoading.style.display = active ? "inline-block" : "none";
+        document.querySelectorAll(".load-button").forEach(button => {
+          button.disabled = active;
+          const label = button.dataset.label;
+          button.innerHTML = active && button === activeButton
+            ? `<span class="spinner"></span>正在拉取`
+            : label;
+        });
+      }
+
+      function formatTime(seconds) {
+        if (!seconds) return "";
+        try {
+          return new Intl.DateTimeFormat("zh-CN", {
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+          }).format(new Date(seconds * 1000));
+        } catch (_) {
+          return "";
+        }
+      }
+
+      function safeImageUrl(url) {
+        try {
+          const parsed = new URL(url);
+          return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : "";
+        } catch (_) {
+          return "";
+        }
+      }
+
+      function makeAvatar(user, target) {
+        target.replaceChildren();
+        const name = user.nickname || "抖";
+        target.textContent = name.slice(0, 1);
+        const src = safeImageUrl(user.avatar);
+        if (!src) return;
+        const image = document.createElement("img");
+        image.src = src;
+        image.alt = "";
+        image.referrerPolicy = "no-referrer";
+        image.addEventListener("error", () => image.remove(), { once: true });
+        target.appendChild(image);
+      }
+
+      function renderComments(data) {
+        state.comments = Array.isArray(data.comments) ? data.comments : [];
+        state.selectedIndex = -1;
+        clearSelection();
+        els.commentList.replaceChildren();
+
+        const videoCount = Number(data.video_count || 0);
+        const commentCount = state.comments.length;
+        els.resultSummary.innerHTML = videoCount > 1
+          ? `已加载 <strong>${videoCount}</strong> 个作品，共 <strong>${commentCount}</strong> 条评论`
+          : `已加载 <strong>${commentCount}</strong> 条评论`;
+
+        const source = data.resolved_url || "";
+        els.sourceBadge.style.display = source ? "inline-block" : "none";
+        els.sourceBadge.textContent = source;
+        els.sourceBadge.title = source;
+
+        const failures = Array.isArray(data.failed_videos) ? data.failed_videos.length : 0;
+        els.failureSummary.textContent = failures ? `${failures} 个作品读取失败` : "";
+
+        if (!commentCount) {
+          const empty = document.createElement("div");
+          empty.className = "empty-state";
+          const content = document.createElement("div");
+          const icon = document.createElement("div");
+          icon.className = "empty-icon";
+          icon.textContent = "—";
+          const heading = document.createElement("h2");
+          heading.textContent = "没有读取到评论";
+          const text = document.createElement("p");
+          text.textContent = "可能该作品暂无评论、评论不可见，或 Cookie 登录状态需要更新。";
+          content.append(icon, heading, text);
+          empty.appendChild(content);
+          els.commentList.appendChild(empty);
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        state.comments.forEach((comment, index) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "comment-item";
+          item.setAttribute("aria-selected", "false");
+          item.dataset.index = String(index);
+
+          const avatar = document.createElement("div");
+          avatar.className = "avatar";
+          makeAvatar(comment.user || {}, avatar);
+
+          const main = document.createElement("div");
+          main.className = "comment-main";
+
+          const nameLine = document.createElement("div");
+          nameLine.className = "comment-name";
+          const name = document.createElement("span");
+          name.textContent = comment.user?.nickname || "抖音用户";
+          nameLine.appendChild(name);
+
+          if (videoCount > 1 && comment.video?.id) {
+            const videoTag = document.createElement("span");
+            videoTag.className = "video-tag";
+            videoTag.textContent = comment.video.desc || `作品 ${comment.video.id}`;
+            videoTag.title = videoTag.textContent;
+            nameLine.appendChild(videoTag);
+          }
+
+          const text = document.createElement("div");
+          text.className = "comment-text";
+          text.textContent = comment.text || "（无文本内容）";
+          main.append(nameLine, text);
+
+          const side = document.createElement("div");
+          side.className = "comment-side";
+          const time = formatTime(comment.create_time);
+          side.textContent = `${time ? `${time} · ` : ""}赞 ${comment.digg_count || 0}`;
+
+          item.append(avatar, main, side);
+          item.addEventListener("click", () => selectComment(index));
+          fragment.appendChild(item);
+        });
+        els.commentList.appendChild(fragment);
+        els.commentList.scrollTop = 0;
+      }
+
+      function clearSelection() {
+        els.selectedPlaceholder.style.display = "block";
+        els.selectedUser.style.display = "none";
+        els.selectedSignature.style.display = "none";
+        els.selectedComment.style.display = "none";
+        els.sendResult.className = "send-result";
+        els.sendResult.textContent = "";
+        updateSendButton();
+      }
+
+      function selectComment(index) {
+        const comment = state.comments[index];
+        if (!comment) return;
+        state.selectedIndex = index;
+        document.querySelectorAll(".comment-item").forEach(item => {
+          item.setAttribute("aria-selected", item.dataset.index === String(index) ? "true" : "false");
+        });
+
+        const user = comment.user || {};
+        els.selectedPlaceholder.style.display = "none";
+        els.selectedUser.style.display = "flex";
+        makeAvatar(user, els.selectedAvatar);
+        els.selectedName.textContent = user.nickname || "抖音用户";
+        els.selectedUid.textContent = user.uid ? `UID: ${user.uid}` : "UID 不可用";
+
+        els.selectedSignature.textContent = user.signature || "该用户没有公开签名";
+        els.selectedSignature.style.display = "block";
+        els.selectedComment.textContent = comment.text || "（无文本内容）";
+        els.selectedComment.style.display = "block";
+        els.sendResult.className = "send-result";
+        els.sendResult.textContent = "";
+        updateSendButton();
+      }
+
+      function updateSendButton() {
+        const selected = state.comments[state.selectedIndex];
+        const hasUid = Boolean(selected?.user?.uid && /^\d+$/.test(selected.user.uid));
+        els.sendMessage.disabled = state.sending || !hasUid || !state.messagingReady;
+        if (!state.messagingReady) {
+          els.sendMessage.title = "请先配置私信安全凭证";
+        } else if (!hasUid) {
+          els.sendMessage.title = "请先选择 UID 有效的评论用户";
+        } else {
+          els.sendMessage.title = "";
+        }
+      }
+
+      async function loadConfig() {
+        try {
+          const config = await api("/api/config");
+          els.cookieInput.value = config.cookie || "";
+          if (config.cookie_configured && config.cookie_valid_shape) {
+            setStatus(els.cookieStatus, "已配置", "ready");
+            els.cookieHint.textContent = `当前读取：${config.cookie_source}`;
+          } else if (config.cookie_configured) {
+            setStatus(els.cookieStatus, "配置不完整", "warning");
+            els.cookieHint.textContent = "Cookie 缺少必要字段，请重新保存完整值";
+          } else {
+            setStatus(els.cookieStatus, "未配置", "warning");
+            els.cookieHint.textContent = "粘贴登录后的完整 Cookie 并保存";
+          }
+
+          state.messagingReady = Boolean(config.messaging_ready);
+          if (state.messagingReady) {
+            setStatus(els.messageStatus, "私信凭证就绪", "ready");
+          } else {
+            setStatus(els.messageStatus, "需补充凭证", "warning");
+            els.messageStatus.title = "查看 docs/configuration.md";
+          }
+          updateSendButton();
+
+          if (!config.reference_ready) {
+            showToast("未找到 DouYin_Spider，请先配置参考项目路径", true);
+          }
+        } catch (error) {
+          setStatus(els.cookieStatus, "读取失败", "warning");
+          setStatus(els.messageStatus, "读取失败", "warning");
+          els.cookieHint.textContent = error.message;
+        }
+      }
+
+      async function handleCommentRequest(path, body, button) {
+        if (state.loading) return;
+        const requestId = typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const controller = new AbortController();
+        state.currentRequestId = requestId;
+        state.currentController = controller;
+        setLoading(true, button);
+        els.resultSummary.textContent = path.includes("creator")
+          ? "正在读取作品列表并逐个拉取评论…"
+          : "正在拉取视频评论…";
+        els.failureSummary.textContent = "";
+        try {
+          const data = await api(
+            path,
+            { ...body, request_id: requestId },
+            { signal: controller.signal }
+          );
+          renderComments(data);
+          showToast(`拉取完成，共 ${data.comment_count || 0} 条评论`);
+        } catch (error) {
+          if (error.name === "AbortError") {
+            els.resultSummary.textContent = "已停止拉取";
+          } else {
+            els.resultSummary.textContent = "拉取失败";
+            showToast(error.message, true);
+          }
+        } finally {
+          if (state.currentRequestId === requestId) {
+            state.currentRequestId = "";
+            state.currentController = null;
+            setLoading(false, button);
+          }
+        }
+      }
+
+      els.videoForm.addEventListener("submit", event => {
+        event.preventDefault();
+        handleCommentRequest(
+          "/api/comments/video",
+          {
+            url: els.videoUrl.value.trim(),
+            limit: Number(els.commentLimit.value)
+          },
+          event.submitter
+        );
+      });
+
+      els.creatorForm.addEventListener("submit", event => {
+        event.preventDefault();
+        handleCommentRequest(
+          "/api/comments/creator",
+          {
+            url: els.creatorUrl.value.trim(),
+            video_limit: Number(els.videoLimit.value),
+            total_comment_limit: Number(els.creatorCommentLimit.value)
+          },
+          event.submitter
+        );
+      });
+
+      els.stopLoading.addEventListener("click", async () => {
+        if (!state.loading || !state.currentRequestId) return;
+        const requestId = state.currentRequestId;
+        state.currentController?.abort();
+        state.currentRequestId = "";
+        state.currentController = null;
+        setLoading(false);
+        els.resultSummary.textContent = "已停止拉取";
+        showToast("已停止当前拉取任务");
+        try {
+          await api("/api/tasks/cancel", { request_id: requestId });
+        } catch (_) {
+          // The browser-side abort has already released the loading state.
+        }
+      });
+
+      els.saveCookie.addEventListener("click", async () => {
+        const cookie = els.cookieInput.value.trim();
+        if (!cookie) {
+          showToast("请先粘贴完整 Cookie", true);
+          els.cookieInput.focus();
+          return;
+        }
+        els.saveCookie.disabled = true;
+        els.saveCookie.innerHTML = '<span class="spinner"></span>正在保存';
+        try {
+          const result = await api("/api/cookie", { cookie });
+          showToast(result.message || "Cookie 已保存");
+          await loadConfig();
+        } catch (error) {
+          showToast(error.message, true);
+        } finally {
+          els.saveCookie.disabled = false;
+          els.saveCookie.textContent = "保存 Cookie";
+        }
+      });
+
+      els.sendMessage.addEventListener("click", async () => {
+        const comment = state.comments[state.selectedIndex];
+        if (!comment?.user?.uid || state.sending) return;
+        const content = els.messageInput.value.trim();
+        if (!content) {
+          showToast("请输入私信内容", true);
+          els.messageInput.focus();
+          return;
+        }
+
+        state.sending = true;
+        updateSendButton();
+        els.sendMessage.innerHTML = '<span class="spinner"></span>正在发送';
+        els.sendResult.className = "send-result";
+        try {
+          const result = await api("/api/messages/send", {
+            user_id: comment.user.uid,
+            content
+          });
+          els.sendResult.className = "send-result success";
+          els.sendResult.textContent = `发送成功，会话 ID：${result.conversation_id}`;
+          showToast(`已发送给 ${comment.user.nickname || "当前用户"}`);
+        } catch (error) {
+          els.sendResult.className = "send-result error";
+          els.sendResult.textContent = error.message;
+          showToast(error.message, true);
+        } finally {
+          state.sending = false;
+          els.sendMessage.textContent = "发送私信";
+          updateSendButton();
+        }
+      });
+
+      loadConfig();
+    })();
+  </script>
+</body>
+</html>

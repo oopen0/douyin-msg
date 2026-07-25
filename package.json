@@ -1,0 +1,9 @@
+{
+  "name": "douyin-comment-message-tool",
+  "private": true,
+  "description": "本地抖音评论与单人私信工具",
+  "dependencies": {
+    "jsrsasign": "^11.1.0"
+  }
+}
+

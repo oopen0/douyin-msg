@@ -4,7 +4,6 @@ import base64
 import json
 import os
 import re
-import sys
 import threading
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,7 +15,6 @@ from dotenv import dotenv_values
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-DEFAULT_REFERENCE_ROOT = PROJECT_ROOT.parent / "DouYin_Spider"
 MAX_COMMENTS = 200
 MAX_CREATOR_COMMENTS = 1000
 MAX_VIDEOS = 10
@@ -37,7 +35,6 @@ class AppConfig:
     cookie_source: str
     web_protect: str
     security_keys: str
-    reference_root: Path
 
     @property
     def messaging_ready(self) -> bool:
@@ -87,22 +84,13 @@ def _check_cancelled(cancel_event: threading.Event | None) -> None:
 
 def load_config() -> AppConfig:
     local_values = dotenv_values(PROJECT_ROOT / ".env")
-    reference_hint = (
-        _non_empty(os.getenv("DOUYIN_SPIDER_ROOT"))
-        or _non_empty(local_values.get("DOUYIN_SPIDER_ROOT"))
-    )
-    reference_root = Path(reference_hint).expanduser() if reference_hint else DEFAULT_REFERENCE_ROOT
-    reference_values = dotenv_values(reference_root / ".env")
 
     env_cookie = _non_empty(os.getenv("DY_COOKIES"))
     local_cookie = _non_empty(local_values.get("DY_COOKIES"))
-    reference_cookie = _non_empty(reference_values.get("DY_COOKIES"))
     if env_cookie:
         cookie, source = env_cookie, "系统环境变量"
     elif local_cookie:
         cookie, source = local_cookie, str(PROJECT_ROOT / ".env")
-    elif reference_cookie:
-        cookie, source = reference_cookie, str(reference_root / ".env")
     else:
         cookie, source = "", str(PROJECT_ROOT / ".env")
 
@@ -112,14 +100,11 @@ def load_config() -> AppConfig:
         web_protect=(
             _non_empty(os.getenv("DY_WEB_PROTECT"))
             or _non_empty(local_values.get("DY_WEB_PROTECT"))
-            or _non_empty(reference_values.get("DY_WEB_PROTECT"))
         ),
         security_keys=(
             _non_empty(os.getenv("DY_SECURITY_KEYS"))
             or _non_empty(local_values.get("DY_SECURITY_KEYS"))
-            or _non_empty(reference_values.get("DY_SECURITY_KEYS"))
         ),
-        reference_root=reference_root.resolve(),
     )
 
 
@@ -156,13 +141,7 @@ def validate_cookie(cookie: str) -> None:
         raise DouyinServiceError(f"Cookie 缺少 {', '.join(missing)}，请复制登录后的完整 Cookie")
 
 
-def _load_reference_modules(config: AppConfig):
-    if not config.reference_root.is_dir():
-        raise DouyinServiceError(
-            f"找不到 DouYin_Spider：{config.reference_root}。请配置 DOUYIN_SPIDER_ROOT"
-        )
-    if str(config.reference_root) not in sys.path:
-        sys.path.insert(0, str(config.reference_root))
+def _load_local_modules():
     try:
         from builder.auth import DouyinAuth
         from builder.header import HeaderBuilder, HeaderType
@@ -173,7 +152,9 @@ def _load_reference_modules(config: AppConfig):
         from utils.dy_util import generate_a_bogus, generate_msToken, splice_url
         from protobuf_to_dict import protobuf_to_dict
     except Exception as exc:
-        raise DouyinServiceError(f"加载 DouYin_Spider 失败：{exc}") from exc
+        raise DouyinServiceError(
+            f"加载本地抖音核心模块失败：{exc}。请重新安装项目依赖"
+        ) from exc
     return {
         "DouyinAuth": DouyinAuth,
         "HeaderBuilder": HeaderBuilder,
@@ -196,7 +177,7 @@ def _make_auth(config: AppConfig, *, require_messaging: bool = False):
             "私信凭证未配置或格式无效。请按 docs/configuration.md 配置 "
             "DY_SECURITY_KEYS 和 DY_WEB_PROTECT 后重启"
         )
-    modules = _load_reference_modules(config)
+    modules = _load_local_modules()
     auth = modules["DouyinAuth"]()
     try:
         auth.perepare_auth(config.cookie, "", "")

@@ -1050,9 +1050,6 @@
           }
           updateSendButton();
 
-          if (!config.reference_ready) {
-            showToast("未找到 DouYin_Spider，请先配置参考项目路径", true);
-          }
         } catch (error) {
           setStatus(els.cookieStatus, "读取失败", "warning");
           setStatus(els.messageStatus, "读取失败", "warning");

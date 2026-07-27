@@ -1,11 +1,15 @@
 import json
 import threading
 import unittest
+import importlib
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from douyin_service import (
     DouyinServiceError,
     DouyinTaskCancelled,
+    PROJECT_ROOT,
+    _load_local_modules,
     _resolve_messaging_credentials,
     cookie_map,
     extract_url,
@@ -129,6 +133,24 @@ class MessagingCredentialTests(unittest.TestCase):
 
         self.assertEqual(web["ticket"], "ticket")
         self.assertEqual(keys["ec_privateKey"], "line1\nline2")
+
+
+class IndependentPackagingTests(unittest.TestCase):
+    def test_core_modules_are_loaded_from_this_project(self):
+        modules = _load_local_modules()
+        objects = [
+            modules["DouyinAuth"],
+            modules["DouyinAPI"],
+            modules["ProtoBuilder"],
+        ]
+        paths = [
+            Path(importlib.import_module(obj.__module__).__file__).resolve()
+            for obj in objects
+        ]
+        paths.append(Path(modules["ResponseProto"].__file__).resolve())
+
+        for path in paths:
+            self.assertTrue(path.is_relative_to(PROJECT_ROOT), str(path))
 
 
 if __name__ == "__main__":

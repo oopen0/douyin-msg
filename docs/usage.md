@@ -22,5 +22,5 @@
 
 - “Cookie 缺少 sessionid”：重新登录网页版并复制完整 Cookie。
 - “私信凭证未配置”：按 [配置说明](configuration.md) 获取两项 `localStorage` 值。
-- “找不到 DouYin_Spider”：将参考项目放在本项目同级目录，或配置 `DOUYIN_SPIDER_ROOT`。
+- “加载本地抖音核心模块失败”：重新执行 `uv pip install -r requirements.txt` 和 `npm install`。
 - 接口返回验证或风控提示：先在浏览器正常访问抖音并完成验证，再更新 Cookie。

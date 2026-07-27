@@ -1,10 +1,9 @@
 {
   "name": "douyin-comment-message-tool",
-  "version": "1.0.0",
   "private": true,
   "description": "本地抖音评论与单人私信工具",
-  "license": "GPL-3.0-only",
   "dependencies": {
     "jsrsasign": "^11.1.0"
   }
 }
+

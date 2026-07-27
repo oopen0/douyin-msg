@@ -84,8 +84,6 @@ class AppHandler(BaseHTTPRequestHandler):
                         ),
                         "cookie_source": config.cookie_source,
                         "messaging_ready": config.messaging_ready,
-                        "reference_ready": config.reference_root.is_dir(),
-                        "reference_root": str(config.reference_root),
                     },
                 }
             )

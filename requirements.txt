@@ -1,7 +1,5 @@
-beautifulsoup4>=4.12
 protobuf>=5.29,<6
 protobuf3-to-dict>=0.1.5
 PyExecJS>=1.5.1
 python-dotenv>=1.0
 requests>=2.32
-

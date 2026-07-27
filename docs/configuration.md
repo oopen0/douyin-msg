@@ -12,7 +12,7 @@ DY_COOKIES='sessionid=...; s_v_web_id=...; ...'
 
 ## 主动私信凭证
 
-`DouYin_Spider` 当前的主动私信协议使用浏览器安全 SDK 的签名私钥和 Web Protect 会话凭证。这两项位于抖音页面的 `localStorage`，不包含在 Cookie 中。
+主动私信协议使用浏览器安全 SDK 的签名私钥和 Web Protect 会话凭证。这两项位于抖音页面的 `localStorage`，不包含在 Cookie 中。
 
 在已登录的 `https://www.douyin.com/` 页面按 F12 打开 Console，分别执行：
 
@@ -36,8 +36,6 @@ DY_WEB_PROTECT='粘贴第二项'
 ## 可选项
 
 ```dotenv
-# 把下面路径换成你本机 DouYin_Spider 的实际存放位置
-DOUYIN_SPIDER_ROOT='/path/to/DouYin_Spider'
 APP_HOST=127.0.0.1
 APP_PORT=8765
 ```

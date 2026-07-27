@@ -36,7 +36,8 @@ DY_WEB_PROTECT='粘贴第二项'
 ## 可选项
 
 ```dotenv
-DOUYIN_SPIDER_ROOT='D:\MyGithub\DouYin_Spider'
+# 把下面路径换成你本机 DouYin_Spider 的实际存放位置
+DOUYIN_SPIDER_ROOT='/path/to/DouYin_Spider'
 APP_HOST=127.0.0.1
 APP_PORT=8765
 ```
